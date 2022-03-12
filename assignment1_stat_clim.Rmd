@@ -1,0 +1,319 @@
+---
+title: "Assignment 1 Statistical Climatology"
+author: "JFbR61ykh"
+date: "3/20/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This report is about understanding of manipulation and analysis of climatic data in r-instat and R . We subdivide our work in 4 main parts. Fisrt we analyse the Sadore data with R-instat. this involved ploting some graphs, analyse descriptive statistics. The second part concern circular graph. In that part, we make some circular graph with PICSA, some calulations and Wind rose graphs. The third part concern analysis of time series. To achieve this, we will use Dodoma data and make some graphs and analysis and on the last part we are interesting in the analysis of extreme for sadore data.
+
+## Part 1: Analysis of Sadore data with R-instat
+
+# Rainfall plot
+From the plot below, we can see that on average, the sum of rainfall
+is 555. We can also notice that there  is no climate change since the trend in the
+total rainfall from 1983 to 2014 is just variate. So is better to talk about climate variability.
+
+
+```{r fig.align="center", echo=FALSE, fig.cap="Rainfall plot for Sadore", out.width = '50%'}
+knitr::include_graphics("rainfall_sadore.png")
+
+```
+
+# Rainday plot
+
+We can also tried to have a look on the rainy day. The graph is showing below. On average we have 35 total numbers of rainy day. We can see that the first year was favorable for the farmers to plant crops, because at this years we have the highest peaks of rainy day.
+
+```{r fig.align="center", echo=FALSE, fig.cap="Rainday plot for Sadore", out.width = '50%'}
+knitr::include_graphics("rainday_sadore.png")
+
+```
+
+# Lineplot 
+Looking at the graph below we can notice that we have more variability on the maximum temperature and also on the minimum temperature
+
+```{r fig.align="center", echo=FALSE, fig.cap="lineplot for Sadore", out.width = '50%'}
+knitr::include_graphics("lineplot_sadore.png")
+
+```
+# Line plot by month
+
+With the lineplot by month, we can better see how the rainfall was variating across each month. From the graph below, we can observe that July, september, october are characterise by high peaks of rainfall. That is usually the rainy season. So those month are favorable for the farmers.
+
+```{r fig.align="center", echo=FALSE, fig.cap="lineplot by month for Sadore", out.width = '50%'}
+knitr::include_graphics("lineplot_month_Sadore.png")
+
+```
+
+
+# Boxplot
+In the graph below we present the boxplot of the sum of rainfall for the various months. To do this we go to climatic,
+prepare, climatic summaries.
+
+```{r fig.align="center", echo=FALSE, fig.cap="Boxplot for sadore", out.width = '50%'}
+knitr::include_graphics("boxplot_sadore.png")
+
+```
+
+
+## Part 2: Circular Graphs and Wind Rose
+# Histogram plot
+In the histogram below, we can see that much of the wind direction
+was around 1800 to 2400. TO do this plot we  change the Y-axis to
+continues, then from auto to custom, a pop up menu appears where we specify
+the lower and upper limit as -2500 to 4500.  
+
+```{r fig.align="center", echo=FALSE, fig.cap="Histogram of wd1", out.width = '50%'}
+knitr::include_graphics("hist_wd1.png")
+
+```
+
+# Circular graph
+below the circular graph
+
+```{r fig.align="center", echo=FALSE, fig.cap="Circular graph for wd1", out.width = '50%'}
+knitr::include_graphics("circular_w1.png")
+
+```
+ Also we can visualise circular with facet
+ 
+```{r fig.align="center", echo=FALSE, fig.cap="Circular graph with facet for wd1", out.width = '50%'}
+knitr::include_graphics("circular graph with facet_wd1.png")
+
+```
+
+## Part 3: Analisis of Time Serie
+The data utilised for this part is the Dodoma data which includes observations of rainfall, maximum temperature, minimum temperature and sunshine hours since 1935 recorded daily. The work is performed in R. So we first load the packages that we will use.
+
+
+```{r}
+library(fabletools)
+library(tidyr)
+library(datasets)
+library(zoo)
+library(tsibble)
+library(tseries)
+library(lubridate)
+library(fpp3)
+library(tsibbledata)
+library(seasonal)
+library(feasts)
+library(GGally)
+library(grid)
+library(gridExtra)
+library(forecast)
+```
+
+```{r}
+library(openair)
+```
+
+Now we can load the data.
+```{r}
+data<-read.csv("dodoma.csv")
+
+```
+
+# Ploting time series
+Now we want to plot the time series of different variables in dodoma. We will plot time series for the maximum temperature, minimmum temperature, rainfall and sunshine. But before it, we have to do some filtering and transformation.
+
+# Filter Dodoma data
+We will use data from 2011 to 2014 to have beter Visualization of the data. Because this range comtain the most information in the data. To do this, we use selectByDate from the openair package. The code in R is as following.
+
+```{r}
+newdta<-selectByDate(
+  data,
+  start = "2011-01-01",
+  end = "2013-12-31"
+)
+
+```
+
+# Transform into tsible
+
+In R, we use The as_tsibble function to transform the data into a tsibble  that is time series tidy table. We can see the as following.
+
+```{r}
+dodoma_daily<-newdta%>%
+mutate(date = as_date(date))%>%
+select(-year, -month, -day, -month_abbr, -doy_366)%>%
+as_tsibble(index = date)%>%
+arrange(date)
+```
+
+# Plots dodoma time series
+
+Below, we have the code for time series of maximum temperature, minimmum temperature, rainfall and sunshine.
+
+```{r}
+#plot maximum temperature
+P1<-dodoma_daily%>%
+ggplot(aes(x = date, y = tmax))+
+geom_path(colour = "red")+
+ggtitle("Daily maximum temperatures 2011 - 2014 Dodoma")+
+theme(plot.title = element_text(size = 8))
+```
+
+```{r}
+#plot minimum temperature
+P2<-dodoma_daily%>%
+ggplot(aes(x = date, y = tmin))+
+geom_path(colour = "green4")+
+ggtitle("Daily minimum temperatures 2011 - 2014 Dodoma")+
+theme(plot.title = element_text(size = 8))
+```
+
+```{r}
+#plot rainfall
+P3<-dodoma_daily%>%
+ggplot(aes(x = date, y = rain))+
+geom_path(colour = "blue")+
+ggtitle("Daily rainfall(mm) 2011 - 2014 Dodoma")+
+theme(plot.title = element_text(size = 8))
+```
+
+```{r}
+#plot sunshine hours
+P4<-dodoma_daily%>%
+ggplot(aes(x = date, y = sunh))+
+geom_path(colour = "yellow3")+
+ggtitle("Daily sunshine hours 2011 - 2014 Dodoma")+
+theme(plot.title = element_text(size = 8))
+```
+
+```{r}
+#combine plots
+grid.arrange(P1, P2, P3, P4, nrow=2)
+```
+
+Looking at the Maximum temperature plot, we can observe some peaks at the end of each years. the minimum temperature plot is quite the same. The rainfall plot is different from the other graphs. we can observe that for all the three years we don't have too much rain . it just appear for the first months and after this practically non-existe. The sunshine plot is not really easier to interpret. There is some seasonality with values reaching very low at the end of every momths.
+
+## Autocorrelation of daily minimum temperature
+
+The code to perform the autocorrelogram in R in as following.
+```{r}
+dodoma_daily %>%
+ACF(tmin, lag_max = 366)%>%
+autoplot()+
+scale_x_continuous(breaks = seq(0,360, 30))+
+ggtitle("Autocorrelogram of minimum daily temperature in Dodoma (2011 - 2014)")
+```
+
+Looking at this graph, we can see a very smooth pattern in ACF values across the range of a year
+with positive correlation between a value on a given day and the 3 months prior as well as values between
+9 and 12 months prior. While values which are 4 to 8 months away from a given day being significantly
+negatively correlated.
+
+```{r}
+dodoma_daily$tmax<-na.interp(dodoma_daily$tmax)
+dcmp1 <- dodoma_daily%>%
+model(STL(tmax, robust = TRUE))
+components(dcmp1)
+```
+
+```{r}
+components(dcmp1)%>%
+autoplot()
+```
+
+```{r}
+dodoma_daily%>%
+autoplot(tmax, color = "gray") +
+autolayer(components(dcmp1), trend, color = "red")+
+ggtitle("Daily maximum temperature - Dodoma 2011- 2014")
+```
+
+```{r}
+dodoma_daily1980<- data%>%
+filter(year>=1980)
+dodoma_daily1980<-dodoma_daily1980%>%
+mutate(date = as_date(date))%>%
+select(-year, -month, -day, -month_abbr, -doy_366)%>%
+as_tsibble(index = date)%>%
+arrange(date)
+dodoma_daily1980<-dodoma_daily1980%>%
+filter_index("1980-01-01" ~ "2013-10-31")
+```
+
+# AR model
+
+```{r}
+fitAR <- dodoma_daily1980%>%
+model(ARIMA(tmax ~ pdq(1,0,0)+PDQ(0,0,0)))
+report(fitAR)
+```
+# Forcasting for Maximum Daily Temperature
+We use the forecast function in R to perform the fordacting. This is the code.
+```{r}
+fitAR %>%
+forecast(h=61)%>%
+autoplot(slice(dodoma_daily1980, (n()-80):n()))+
+ggtitle("Forecast of Maximum Daily Temperature using AR(1) model")
+```
+
+This figure shows that the maximum temperature is predicted to first decline down towards roughly 28
+degrees Celsius within the first few days of November at which point the prediction becomes fixed at this
+temperature. The prediction interval stays the same width across the prediction period.
+
+## Part 4: Analysis of extremes in sadore data
+
+For this part, we will use again the sadore data. Our first step is to import the data from R-instat  and tried to fit the model. To do this we go to Model->fitModel-> onevariable. After fill the table that will open we obtain the following graph.
+
+```{r fig.align="center", echo=FALSE, fig.cap="Fitting of distribution norm by maximum likelihood", out.width = '70%'}
+knitr::include_graphics("fit.png")
+
+```
+
+
+```{r fig.align="center", echo=FALSE, fig.cap="Diagnostic output for sum rainfall", out.width = '50%'}
+knitr::include_graphics("diag.png")
+
+```
+
+When we look at our plots, it's seem like the data is not following the normal distribution. Looking at our probability and quantile plots, We can see deviations from the straight line that means the model assumptions may be invalid for the data plotted. In the case of a perfect fit, the data would line up on the diagonal.  The histogram is another diagnostic which should match up with the curve, but our histogram plot is skew to the left. 
+
+
+
+```{r fig.align="center", echo=FALSE, fig.cap="extRemes with max rainfall", out.width = '50%'}
+knitr::include_graphics("maxraingev.png")
+
+```
+
+
+```{r fig.align="center", echo=FALSE, fig.cap="Density plot with quantile", out.width = '50%'}
+knitr::include_graphics("density.png")
+
+```
+
+```{r fig.align="center", echo=FALSE, fig.cap="Diagnostic output for max rain data", out.width = '50%'}
+knitr::include_graphics("maxrainext.png")
+
+```
+As we seen for the sum rainfall diagnostic, even max rainfall don't validate the assumptions for the normal distribution. looking at the probability and quartile plot, we can observe some deviations from the straight line. 
+
+Now lets look at the Generalized Extreme Value distribution.
+
+
+```{r  fig.align="center", echo=FALSE, fig.cap="Diagnost", out.width = '50%'}
+knitr::include_graphics("cimaxraingev.png")
+
+```
+
+```{r fig.align="center", echo=FALSE, fig.cap="Diagnostic output from the extremes with sadore", out.width = '50%'}
+knitr::include_graphics("extremediag.png")
+```
+
+Looking at the return level plot, we can observe that for each return period, it  gives an estimate of the expected extreme quantile. The 95 per cent confidence interval for return levels is shown in blue.
+
+
+
+
+
+
